@@ -1,0 +1,17 @@
+# Raw data (Tanager scenes) — never commit
+data/*
+!data/README.md
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.egg-info/
+
+# Environment
+.env
+.venv/
+
+# OS
+.DS_Store
