@@ -1,16 +1,17 @@
 """
-Basic radiance-to-reflectance atmospheric correction.
+Optional radiance-to-reflectance validation.
 
-Two paths are supported depending on scene contents:
+This project's primary reflectance input is Planet's own `basic_sr_hdf5`
+product (`tanager_io.load_surface_reflectance`), which is already
+atmospherically corrected — this repository does not re-derive surface
+reflectance from radiance as a required pipeline step.
 
-1. Empirical line correction, if the scene contains known reference targets
-   (e.g. calibration panels or invariant surfaces) with known reflectance.
-2. A simplified ATCOR-like radiative-transfer approach otherwise, using
-   standard atmospheric parameters (AOD, water vapour) rather than
-   scene-specific ground truth.
-
-This module implements a general open approach — it is not SilvaIQ's
-internal atmospheric correction pipeline.
+`empirical_line_correction` below exists only as an optional secondary
+check: fit a linear radiance-to-reflectance transform from a handful of
+reference pixels (e.g. bare soil / bright and dark invariant targets
+visible in the scene) and compare the result against the official
+`surface_reflectance` product on a few bands, as a sanity check on the
+official product rather than a replacement for it.
 """
 
 from __future__ import annotations
@@ -23,7 +24,8 @@ def empirical_line_correction(
     reference_radiance: np.ndarray,
     reference_reflectance: np.ndarray,
 ) -> np.ndarray:
-    """Fit a per-band linear radiance-to-reflectance transform from reference targets.
+    """Fit a per-band linear radiance-to-reflectance transform from reference targets
+    and apply it to a full radiance cube.
 
     Parameters
     ----------
@@ -35,13 +37,9 @@ def empirical_line_correction(
     -------
     reflectance : ndarray, shape (rows, cols, bands)
     """
-    raise NotImplementedError
-
-
-def simplified_atmospheric_correction(
-    radiance: np.ndarray,
-    wavelengths: np.ndarray,
-    solar_zenith_deg: float,
-) -> np.ndarray:
-    """Approximate radiance-to-reflectance conversion without reference targets."""
-    raise NotImplementedError
+    n_targets, n_bands = reference_radiance.shape
+    gain = np.empty(n_bands)
+    offset = np.empty(n_bands)
+    for b in range(n_bands):
+        gain[b], offset[b] = np.polyfit(reference_radiance[:, b], reference_reflectance[:, b], deg=1)
+    return radiance * gain + offset
