@@ -118,3 +118,40 @@ def invert_lut(observed_spectrum: np.ndarray, lut: dict, wavelength_mask: np.nda
     best_idx = int(np.argmin(ssr))
 
     return dict(zip(lut["parameter_names"], lut["parameters"][best_idx]))
+
+
+def invert_lut_batch(
+    observed_spectra: np.ndarray, lut: dict, wavelength_mask: np.ndarray | None = None
+) -> np.ndarray:
+    """Vectorized nearest-neighbour LUT inversion for many observed spectra at once.
+
+    Uses the identity ||a-b||^2 = ||a||^2 + ||b||^2 - 2*a.b so the pairwise
+    sum-of-squared-residuals matrix is computed via a single matrix multiply
+    rather than an (n_pixels, n_lut, n_bands) broadcast — this is what makes
+    inverting thousands of real image pixels against an LUT of thousands of
+    samples tractable in a notebook.
+
+    Parameters
+    ----------
+    observed_spectra : ndarray, shape (n_pixels, bands)
+    lut : output of generate_lut
+    wavelength_mask : optional boolean band mask (hyperspectral vs multispectral comparison)
+
+    Returns
+    -------
+    ndarray, shape (n_pixels, n_params) — retrieved parameters per pixel,
+    columns ordered per `lut["parameter_names"]`.
+    """
+    spectra = lut["spectra"]
+    obs = observed_spectra
+    if wavelength_mask is not None:
+        spectra = spectra[:, wavelength_mask]
+        obs = obs[:, wavelength_mask]
+
+    obs_norm = np.sum(obs**2, axis=1, keepdims=True)  # (n_pixels, 1)
+    lut_norm = np.sum(spectra**2, axis=1)[None, :]  # (1, n_lut)
+    cross = obs @ spectra.T  # (n_pixels, n_lut)
+    ssr = obs_norm + lut_norm - 2 * cross
+
+    best_idx = np.argmin(ssr, axis=1)
+    return lut["parameters"][best_idx]

@@ -24,6 +24,24 @@ MULTISPECTRAL_BANDS_NM = {
 # Water absorption feature windows (nm) relevant to Cw/Cm retrieval.
 SWIR_WATER_FEATURES_NM = (1450, 1940)
 
+# Strong atmospheric water-vapour absorption windows (nm) where at-surface
+# reflectance retrieval has very low SNR regardless of atmospheric correction
+# quality — standard imaging-spectroscopy practice is to exclude these from
+# any reflectance-based retrieval. Observed directly in this project's real
+# Tanager scene (see notebooks/02_prospect_d_forward_model.ipynb).
+ATMOSPHERIC_WINDOW_RANGES_NM = ((1340, 1470), (1790, 1960))
+
+
+def valid_band_mask(
+    wavelengths: np.ndarray, atmospheric_windows=ATMOSPHERIC_WINDOW_RANGES_NM
+) -> np.ndarray:
+    """Boolean mask over `wavelengths`, True for bands usable in retrieval —
+    i.e. excluding the strong atmospheric water-vapour absorption windows."""
+    mask = np.ones(len(wavelengths), dtype=bool)
+    for lo, hi in atmospheric_windows:
+        mask &= ~((wavelengths >= lo) & (wavelengths <= hi))
+    return mask
+
 
 def nearest_band_indices(wavelengths: np.ndarray, target_nm: dict[str, float]) -> dict[str, int]:
     """Map named target wavelengths to the nearest available Tanager band index."""
