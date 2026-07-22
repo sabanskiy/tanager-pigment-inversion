@@ -37,6 +37,12 @@ These are the author's own reference implementations of the exact models this pr
 Planet Labs PBC — Tanager hyperspectral satellite constellation, Basic Radiance product documentation.
 https://www.planet.com/products/hyperspectral/
 
+**Data license and required attribution (confirmed 2026-07-22, from the STAC catalog's own `description` field at [tanager-core-imagery/catalog.json](https://www.planet.com/data/stac/tanager-core-imagery/catalog.json)):** Tanager Open STAC data is licensed under [Creative Commons CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Required attribution for any redistribution:
+
+> "Tanager STAC Data, available at www.planet.com/data/stac © [YEAR] Planet Labs PBC. All Rights Reserved" — prefaced with "Adapted from..." for any adapted material, where `[YEAR]` is the year the data was captured.
+
+Scene used in this repository: `20250918_112737_91_4001` (captured 2025-09-18, Rezonville, Metz, Grand Est, France) → **"Adapted from Tanager STAC Data, available at www.planet.com/data/stac © 2025 Planet Labs PBC. All Rights Reserved."**
+
 ---
 
 Please cite the original PROSPECT-D and 4SAIL papers, and the `prosail` package, if you build on the code in this repository.

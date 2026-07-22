@@ -91,6 +91,8 @@ All Python dependencies in `environment.yml` (numpy, scipy, pandas, matplotlib, 
 
 **One exception:** the Python `prosail` package ([jgomezdans/prosail](https://github.com/jgomezdans/prosail)) does not declare an explicit open-source license upstream (no `LICENSE` file, no PyPI classifier; its Zenodo archive is tagged only generic "other-open"). This repository uses `prosail` strictly as an **unmodified pip dependency** — installed by each user directly from PyPI via `environment.yml` — never vendored or redistributed as part of this repository's own source. No code from `prosail` is copied, embedded, or modified here. See [REFERENCES.md](REFERENCES.md) for the full note and for Féret's own MIT-licensed reference implementations (R packages `prospect`/`prosail`), which formally implement the same published models under a clear license.
 
+**Tanager imagery itself** is licensed CC-BY 4.0 by Planet Labs PBC — see [REFERENCES.md](REFERENCES.md) for the exact required attribution text, separate from the code license above.
+
 ---
 
 ## Team

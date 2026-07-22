@@ -9,7 +9,7 @@ dependencies:
   - pandas
   - matplotlib
   - rasterio
-  - spectral
+  - h5py
   - jupyter
   - pip
   - pip:
