@@ -36,13 +36,37 @@ Our contribution is the **application methodology**: pipeline design for Tanager
 
 ## Analysis design
 
-1. **Data preparation** — load a Tanager Basic Radiance scene over a vegetated area, convert to surface reflectance, clip to a vegetated ROI, mask soil/shadow/water.
-2. **Forward modelling** — generate a Look-Up Table (LUT) spanning literature-standard parameter ranges for Cab, Car, Ant, LAI, Cw, Cm, and canopy structure; simulate spectra at full Tanager spectral resolution.
-3. **Hyperspectral inversion baseline** — invert against the full VSWIR spectrum; report RMSE, R², and bootstrap uncertainty per parameter.
-4. **Multispectral subset experiment** — repeat the inversion restricted to bands matching a typical 4–5 band UAV multispectral sensor; quantify the degradation per parameter.
-5. **SWIR contribution analysis** — incrementally add SWIR channels (1400–2500 nm) to the multispectral subset and track the change in Cw/Cm retrieval quality.
+1. **Data preparation** (`01`) — load a Tanager scene (Planet's official atmospherically-corrected `surface_reflectance` product), clip to a vegetated ROI using NDVI plus Planet's own cloud/cirrus/nodata masks.
+2. **Forward modelling** (`02`) — generate a Look-Up Table (LUT) spanning literature-standard parameter ranges for N, Cab, Car, Ant, Cw, Cm, LAI; simulate spectra at full Tanager spectral resolution via `prosail`, grounded in the scene's real solar geometry.
+3. **Hyperspectral inversion baseline** (`03`) — invert against the full valid VSWIR spectrum; report RMSE, R², and bootstrap uncertainty per parameter via a synthetic self-consistency test (see "Results" below for why).
+4. **Multispectral subset experiment** (`04`) — repeat the identical inversion restricted to bands matching a typical 5-band UAV multispectral sensor, and to that sensor with SWIR channels incrementally added around the 1450/1940 nm water absorption features.
+5. **Final figures** (`05`) — RMSE/R² vs. band count for all seven parameters, and a side-by-side real-image comparison of multispectral-only vs. hyperspectral Cw retrieval.
 
-**Output:** a quantitative, reproducible answer to *"for which plant biochemical parameters does hyperspectral data change the result, and by how much?"*
+---
+
+## Results
+
+**Validation approach:** this open dataset has no field-measured pigment ground truth for any scene, so retrieval quality is quantified through a synthetic self-consistency test — an independent set of "true" parameter combinations is drawn from the same physical ranges, simulated, given noise informed by the scene's own measured `surface_reflectance_uncertainty`, then inverted against a separate reference LUT and compared to the known truth. Full methodology in `notebooks/03_hyperspectral_inversion.ipynb`.
+
+Scene: `20250918_112737_91_4001` (Rezonville, Metz, Grand Est, France — see `data/README.md` for why; geography is not physically load-bearing for this result).
+
+| Parameter | 5-band multispectral, relative RMSE | Full hyperspectral, relative RMSE | Improvement |
+|---|---|---|---|
+| **Cw** (leaf water) | 40.6% | 10.4% | **−30.2 points** |
+| **Cm** (dry matter) | 24.7% | 16.3% | −8.4 points |
+| LAI | 27.4% | 20.6% | −6.8 points |
+| Car (carotenoids) | 38.4% | 34.9% | −3.5 points |
+| N (leaf structure) | 27.1% | 26.3% | −0.8 points |
+| Cab (chlorophyll a+b) | 9.0% | 11.0% | +2.0 points (worse) |
+| Ant (anthocyanins) | 19.2% | 28.2% | +9.0 points (worse) |
+
+**Cw is where hyperspectral changes the result.** Relative RMSE falls from 40.6% (5-band multispectral) to 11.7% with just a ±50 nm SWIR window around the water-absorption features, plateauing near 8% beyond ±100 nm — the clearest, largest effect of any parameter, and the direct empirical answer to this project's core question. The real-image comparison in `notebooks/05_results_and_figures.ipynb` makes this visually unambiguous: multispectral-only Cw retrieval on a real vegetated crop is spatially incoherent noise, while the hyperspectral retrieval clearly resolves the scene's actual river/forest landscape structure.
+
+**Car and Ant stay prior-dominated even with full hyperspectral VSWIR** (R² = −0.46 and 0.04 respectively in the self-consistency test — effectively unconstrained), confirming this is not merely a sensor-resolution problem: PROSPECT's carotenoid and anthocyanin absorption features overlap heavily with chlorophyll's in the visible range, an ill-posedness intrinsic to the leaf optical model itself. Cab, already well-constrained by the 5-band set's red/red-edge/NIR bands, does not benefit from (and is marginally hurt by) adding hyperspectral bands.
+
+**A genuine nuance:** for Cw and Cm, the full hyperspectral band set (366 valid bands) performs slightly *worse* than a targeted ±100–200 nm SWIR subset (85–165 bands) in this nearest-neighbour LUT search — adding many spectrally redundant bands beyond the informative SWIR window dilutes rather than helps the match. **Targeted SWIR coverage, not raw band count, drives the improvement.**
+
+Full tables: `results/tables/04_multispectral_subset_comparison.csv`, `results/tables/05_final_summary.csv`. Figures: `results/figures/05_*.png`.
 
 ---
 
@@ -87,7 +111,7 @@ This is a competition submission built from scratch for this analysis — it is 
 
 ## Third-party licenses
 
-All Python dependencies in `environment.yml` (numpy, scipy, pandas, matplotlib, rasterio, spectral, jupyter, numba) are BSD- or MIT-licensed — fully compatible with this repository's MIT license.
+All Python dependencies in `environment.yml` (numpy, scipy, pandas, matplotlib, rasterio, h5py, jupyter, numba) are BSD- or MIT-licensed — fully compatible with this repository's MIT license.
 
 **One exception:** the Python `prosail` package ([jgomezdans/prosail](https://github.com/jgomezdans/prosail)) does not declare an explicit open-source license upstream (no `LICENSE` file, no PyPI classifier; its Zenodo archive is tagged only generic "other-open"). This repository uses `prosail` strictly as an **unmodified pip dependency** — installed by each user directly from PyPI via `environment.yml` — never vendored or redistributed as part of this repository's own source. No code from `prosail` is copied, embedded, or modified here. See [REFERENCES.md](REFERENCES.md) for the full note and for Féret's own MIT-licensed reference implementations (R packages `prospect`/`prosail`), which formally implement the same published models under a clear license.
 
