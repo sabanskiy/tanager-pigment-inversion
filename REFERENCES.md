@@ -19,10 +19,18 @@ https://doi.org/10.1109/TGRS.2007.895844
 
 ## Software implementation
 
-`prosail` — Python implementation of PROSPECT-D and 4SAIL by J. Gómez-Dans (NCEO & UCL).
+**Python (used in this repository):** `prosail` — Python implementation of PROSPECT-D and 4SAIL by J. Gómez-Dans (NCEO & UCL).
 https://github.com/jgomezdans/prosail
 
-**License note (checked 2026-07-22):** the `prosail` package does not declare an explicit open-source license — no `LICENSE` file in the GitHub repository, no license classifier on PyPI, and its Zenodo archive (DOI [10.5281/zenodo.2574925](https://doi.org/10.5281/zenodo.2574925)) is tagged only as generic "other-open." This repository uses `prosail` as an unmodified pip dependency (installed by each user from PyPI via `environment.yml`), not vendored or redistributed source — but the licensing status of the upstream package itself remains unclear pending clarification from the author.
+**License status (checked 2026-07-22):** the Python `prosail` package does not declare an explicit open-source license — no `LICENSE` file in the GitHub repository (checked at HEAD of `master`, last pushed 2025-03-11), no license classifier on PyPI (empty `license` field, JSON metadata), and its Zenodo archive (DOI [10.5281/zenodo.2574925](https://doi.org/10.5281/zenodo.2574925)) is tagged only as generic "other-open," not a specific SPDX license.
+
+**How this repository handles that:** `prosail` is used strictly as an **unmodified pip dependency**, installed by each user directly from PyPI via `environment.yml`. No `prosail` source code is copied, vendored, embedded, or redistributed inside this repository — this repository's own MIT license covers only the code written here (`src/`, notebooks). This is a transparency note, not a claim that the dependency's licensing gap has been resolved; we have reached out to the author to request an explicit license be added upstream.
+
+**Reference implementations with a clear license (not used directly in this repo, cited for completeness):** Jean-Baptiste Féret (the PROSPECT-D paper's lead author) maintains his own official R implementations, both MIT-licensed:
+- [`jbferet/prospect`](https://github.com/jbferet/prospect) — PROSPECT leaf model (incl. PROSPECT-D/PRO) + inversion routines. MIT License (confirmed via repository `LICENSE.md` and `DESCRIPTION`).
+- [`jbferet/prosail`](https://github.com/jbferet/prosail) — coupled PROSPECT+SAIL canopy model + inversion routines. `License: MIT + file LICENSE` (R packaging convention; confirmed via `DESCRIPTION`).
+
+These are the author's own reference implementations of the exact models this project cites, cleanly licensed — a valid alternative or cross-validation source if the Python `prosail` licensing gap becomes a blocker.
 
 ## Planet Tanager
 

@@ -85,6 +85,14 @@ This is a competition submission built from scratch for this analysis — it is 
 
 ---
 
+## Third-party licenses
+
+All Python dependencies in `environment.yml` (numpy, scipy, pandas, matplotlib, rasterio, spectral, jupyter, numba) are BSD- or MIT-licensed — fully compatible with this repository's MIT license.
+
+**One exception:** the Python `prosail` package ([jgomezdans/prosail](https://github.com/jgomezdans/prosail)) does not declare an explicit open-source license upstream (no `LICENSE` file, no PyPI classifier; its Zenodo archive is tagged only generic "other-open"). This repository uses `prosail` strictly as an **unmodified pip dependency** — installed by each user directly from PyPI via `environment.yml` — never vendored or redistributed as part of this repository's own source. No code from `prosail` is copied, embedded, or modified here. See [REFERENCES.md](REFERENCES.md) for the full note and for Féret's own MIT-licensed reference implementations (R packages `prospect`/`prosail`), which formally implement the same published models under a clear license.
+
+---
+
 ## Team
 
 **Andriy Sabanskyy** — Founder & CEO, SilvaIQ. Technical lead: pipeline design, LUT construction, inversion implementation, analysis, repository preparation.
