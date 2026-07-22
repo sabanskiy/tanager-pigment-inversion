@@ -19,8 +19,10 @@ https://doi.org/10.1109/TGRS.2007.895844
 
 ## Software implementation
 
-`prosail` — Python implementation of PROSPECT-D and 4SAIL by J. Gómez-Dans et al.
+`prosail` — Python implementation of PROSPECT-D and 4SAIL by J. Gómez-Dans (NCEO & UCL).
 https://github.com/jgomezdans/prosail
+
+**License note (checked 2026-07-22):** the `prosail` package does not declare an explicit open-source license — no `LICENSE` file in the GitHub repository, no license classifier on PyPI, and its Zenodo archive (DOI [10.5281/zenodo.2574925](https://doi.org/10.5281/zenodo.2574925)) is tagged only as generic "other-open." This repository uses `prosail` as an unmodified pip dependency (installed by each user from PyPI via `environment.yml`), not vendored or redistributed source — but the licensing status of the upstream package itself remains unclear pending clarification from the author.
 
 ## Planet Tanager
 
