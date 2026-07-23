@@ -22,9 +22,14 @@ Tanager Open Data is served as a public [STAC](https://stacspec.org/) catalog �
    ```
 4. Update the path in `notebooks/01_tanager_load_and_preprocess.ipynb` to point at your local scene.
 
-### Scene used in this repository
+### Scenes used in this repository
 
-`20250918_112737_91_4001` — Rezonville, Metz, Grand Est, France (agriculture collection). 0% cloud cover, 33.67 m GSD, captured 2025-09-18. Chosen as a temperate-climate cereal/oilseed cropland analog (no Tanager Open Data scene currently covers Ukraine — the full 276-scene catalog was checked). Geography is not critical to the result — the physical transferability of PROSPECT-D/SAIL does not depend on location.
+- **`tanager_scene_01`** — `20250918_112737_91_4001`, Rezonville, Metz, Grand Est, France (agriculture collection). 0% cloud, 33.67 m GSD, captured 2025-09-18, sun elevation 42.6°. Primary scene (notebooks 01-08). Chosen as a temperate-climate cereal/oilseed cropland analog (no Tanager Open Data scene currently covers Ukraine — the full 276-scene catalog was checked). Geography is not critical to the result — the physical transferability of PROSPECT-D/SAIL does not depend on location.
+- **`tanager_scene_02`** — `20250224_145149_32_4001`, El Algarrobal, Salta, Argentina (agriculture collection). 0% cloud, 32.94 m GSD, captured 2025-02-24, sun elevation 63.6°. Used in the multi-scene generalisation check (notebook 08) for a contrasting hemisphere/season/sun-geometry.
+- **`tanager_scene_03`** — `20250812_110905_82_4001`, Kleingartach, Baden-Württemberg, Germany (agriculture collection). 0% cloud, 33.82 m GSD, captured 2025-08-12, sun elevation 55.5°.
+- **`tanager_scene_04`** — `20250510_112042_16_4001`, Ringkøbing-Skjern, Central Denmark Region, Denmark (agriculture collection). 0% cloud, 34.13 m GSD, captured 2025-05-10, sun elevation 51.5°.
+
+Scenes 02-04 test whether the channel-selection findings (Sections "Results" in the README) replicate across different crop types, phenological stages, and sun-sensor geometries, per the external methods review's recommendation (`review/reviewer_report.md`, review of single-scene generalisation).
 
 ## File format
 

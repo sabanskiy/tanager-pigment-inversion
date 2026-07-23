@@ -41,7 +41,11 @@ https://www.planet.com/products/hyperspectral/
 
 > "Tanager STAC Data, available at www.planet.com/data/stac © [YEAR] Planet Labs PBC. All Rights Reserved" — prefaced with "Adapted from..." for any adapted material, where `[YEAR]` is the year the data was captured.
 
-Scene used in this repository: `20250918_112737_91_4001` (captured 2025-09-18, Rezonville, Metz, Grand Est, France) → **"Adapted from Tanager STAC Data, available at www.planet.com/data/stac © 2025 Planet Labs PBC. All Rights Reserved."**
+Scenes used in this repository (all captured 2025, so all share the same attribution year) → **"Adapted from Tanager STAC Data, available at www.planet.com/data/stac © 2025 Planet Labs PBC. All Rights Reserved."**
+- `20250918_112737_91_4001` — Rezonville, Metz, Grand Est, France (primary scene)
+- `20250224_145149_32_4001` — El Algarrobal, Salta, Argentina
+- `20250812_110905_82_4001` — Kleingartach, Baden-Württemberg, Germany
+- `20250510_112042_16_4001` — Ringkøbing-Skjern, Central Denmark Region, Denmark
 
 ---
 
