@@ -15,3 +15,6 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Local agentic-development notes — never commit (public repo must show no AI-tooling trace)
+CLAUDE.md
