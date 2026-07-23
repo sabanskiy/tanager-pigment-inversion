@@ -120,38 +120,132 @@ def invert_lut(observed_spectrum: np.ndarray, lut: dict, wavelength_mask: np.nda
     return dict(zip(lut["parameter_names"], lut["parameters"][best_idx]))
 
 
+def _distance_matrix(
+    obs: np.ndarray, spectra: np.ndarray, cost: str, band_sigma: np.ndarray | None
+) -> np.ndarray:
+    """(n_pixels, n_lut) pairwise distance matrix, lower = better match.
+
+    `cost`:
+      - "sse"              : raw sum-of-squared residuals in reflectance units (the
+                              original, unweighted metric — reviewer-flagged confound,
+                              see M1 in review/reviewer_report.md: it over-weights the
+                              high-reflectance NIR plateau relative to the low-reflectance
+                              SWIR water features).
+      - "noise_normalized" : per-band residuals divided by `band_sigma` before SSR —
+                              weights each band by inverse measured noise
+                              (`surface_reflectance_uncertainty`), so bands the sensor
+                              measures more precisely count for more.
+      - "sam"               : Spectral Angle Mapper — scale-invariant by construction
+                              (depends only on spectral *shape*, not magnitude), so it
+                              cannot be confounded by band-magnitude imbalance at all.
+                              Ranking by ascending angle is equivalent to ranking by
+                              descending cosine similarity, so this returns -cos_sim.
+    """
+    if cost == "sse":
+        a, b = obs, spectra
+    elif cost == "noise_normalized":
+        if band_sigma is None:
+            raise ValueError("cost='noise_normalized' requires band_sigma")
+        a, b = obs / band_sigma, spectra / band_sigma
+    elif cost == "sam":
+        obs_n = obs / np.linalg.norm(obs, axis=1, keepdims=True)
+        spectra_n = spectra / np.linalg.norm(spectra, axis=1, keepdims=True)
+        return -(obs_n @ spectra_n.T)
+    else:
+        raise ValueError(f"Unknown cost: {cost!r} (expected 'sse', 'noise_normalized', or 'sam')")
+
+    a_norm = np.sum(a**2, axis=1, keepdims=True)
+    b_norm = np.sum(b**2, axis=1)[None, :]
+    cross = a @ b.T
+    return a_norm + b_norm - 2 * cross
+
+
+def _prepare_for_distance(
+    observed_spectra: np.ndarray,
+    lut: dict,
+    wavelength_mask: np.ndarray | None,
+    band_sigma: np.ndarray | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
+    spectra = lut["spectra"]
+    obs = observed_spectra
+    if wavelength_mask is not None:
+        spectra = spectra[:, wavelength_mask]
+        obs = obs[:, wavelength_mask]
+        if band_sigma is not None:
+            band_sigma = band_sigma[wavelength_mask]
+    return obs, spectra, band_sigma
+
+
 def invert_lut_batch(
-    observed_spectra: np.ndarray, lut: dict, wavelength_mask: np.ndarray | None = None
+    observed_spectra: np.ndarray,
+    lut: dict,
+    wavelength_mask: np.ndarray | None = None,
+    cost: str = "sse",
+    band_sigma: np.ndarray | None = None,
 ) -> np.ndarray:
     """Vectorized nearest-neighbour LUT inversion for many observed spectra at once.
 
-    Uses the identity ||a-b||^2 = ||a||^2 + ||b||^2 - 2*a.b so the pairwise
-    sum-of-squared-residuals matrix is computed via a single matrix multiply
-    rather than an (n_pixels, n_lut, n_bands) broadcast — this is what makes
-    inverting thousands of real image pixels against an LUT of thousands of
-    samples tractable in a notebook.
+    The default cost ("sse") uses the identity ||a-b||^2 = ||a||^2 + ||b||^2 - 2*a.b so
+    the pairwise distance matrix is computed via a single matrix multiply rather than an
+    (n_pixels, n_lut, n_bands) broadcast — this is what makes inverting thousands of real
+    image pixels against an LUT of thousands of samples tractable in a notebook. The
+    "noise_normalized" and "sam" costs reuse the same matmul structure (see `_distance_matrix`).
 
     Parameters
     ----------
     observed_spectra : ndarray, shape (n_pixels, bands)
     lut : output of generate_lut
     wavelength_mask : optional boolean band mask (hyperspectral vs multispectral comparison)
+    cost : "sse" (default, unweighted), "noise_normalized", or "sam" — see `_distance_matrix`
+    band_sigma : ndarray, shape (bands,) — required if cost="noise_normalized"; per-band
+        noise standard deviation (e.g. from the scene's measured `surface_reflectance_uncertainty`),
+        over the *same* (unmasked) band axis as `observed_spectra`/`lut["spectra"]`.
 
     Returns
     -------
     ndarray, shape (n_pixels, n_params) — retrieved parameters per pixel,
     columns ordered per `lut["parameter_names"]`.
     """
-    spectra = lut["spectra"]
-    obs = observed_spectra
-    if wavelength_mask is not None:
-        spectra = spectra[:, wavelength_mask]
-        obs = obs[:, wavelength_mask]
-
-    obs_norm = np.sum(obs**2, axis=1, keepdims=True)  # (n_pixels, 1)
-    lut_norm = np.sum(spectra**2, axis=1)[None, :]  # (1, n_lut)
-    cross = obs @ spectra.T  # (n_pixels, n_lut)
-    ssr = obs_norm + lut_norm - 2 * cross
-
-    best_idx = np.argmin(ssr, axis=1)
+    obs, spectra, band_sigma = _prepare_for_distance(observed_spectra, lut, wavelength_mask, band_sigma)
+    dist = _distance_matrix(obs, spectra, cost, band_sigma)
+    best_idx = np.argmin(dist, axis=1)
     return lut["parameters"][best_idx]
+
+
+def k_best_retrieval(
+    observed_spectra: np.ndarray,
+    lut: dict,
+    k: int,
+    wavelength_mask: np.ndarray | None = None,
+    cost: str = "sse",
+    band_sigma: np.ndarray | None = None,
+) -> dict:
+    """Return the k best-fitting LUT parameter vectors per observed spectrum, plus their
+    mean and spread — the direct diagnostic for whether a parameter is well-constrained
+    (tight spread among near-optimal matches) or ill-posed (broad "cost-valley" spread),
+    rather than inferring ill-posedness indirectly from a negative R² on the single-NN
+    (`argmin`) retrieval alone (review point M3, `review/reviewer_report.md`).
+
+    Returns a dict with:
+        'topk_params' : ndarray (n_pixels, k, n_params), best-match-first
+        'mean'        : ndarray (n_pixels, n_params)
+        'std'         : ndarray (n_pixels, n_params)
+        'iqr'         : ndarray (n_pixels, n_params) — 75th minus 25th percentile among the k
+    """
+    obs, spectra, band_sigma = _prepare_for_distance(observed_spectra, lut, wavelength_mask, band_sigma)
+    dist = _distance_matrix(obs, spectra, cost, band_sigma)
+
+    n_pixels = dist.shape[0]
+    part_idx = np.argpartition(dist, k - 1, axis=1)[:, :k]
+    row_idx = np.arange(n_pixels)[:, None]
+    order = np.argsort(dist[row_idx, part_idx], axis=1)
+    idx_sorted = part_idx[row_idx, order]
+
+    topk_params = lut["parameters"][idx_sorted]  # (n_pixels, k, n_params)
+    q75, q25 = np.percentile(topk_params, [75, 25], axis=1)
+    return {
+        "topk_params": topk_params,
+        "mean": topk_params.mean(axis=1),
+        "std": topk_params.std(axis=1),
+        "iqr": q75 - q25,
+    }
