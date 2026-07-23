@@ -127,10 +127,10 @@ def _distance_matrix(
 
     `cost`:
       - "sse"              : raw sum-of-squared residuals in reflectance units (the
-                              original, unweighted metric — reviewer-flagged confound,
-                              see M1 in review/reviewer_report.md: it over-weights the
-                              high-reflectance NIR plateau relative to the low-reflectance
-                              SWIR water features).
+                              original, unweighted metric — flagged in an external methods
+                              review (not included in this repository) as a possible
+                              confound: it over-weights the high-reflectance NIR plateau
+                              relative to the low-reflectance SWIR water features).
       - "noise_normalized" : per-band residuals divided by `band_sigma` before SSR —
                               weights each band by inverse measured noise
                               (`surface_reflectance_uncertainty`), so bands the sensor
@@ -224,7 +224,8 @@ def k_best_retrieval(
     mean and spread — the direct diagnostic for whether a parameter is well-constrained
     (tight spread among near-optimal matches) or ill-posed (broad "cost-valley" spread),
     rather than inferring ill-posedness indirectly from a negative R² on the single-NN
-    (`argmin`) retrieval alone (review point M3, `review/reviewer_report.md`).
+    (`argmin`) retrieval alone (review point M3, an external methods review not included
+    in this repository).
 
     Returns a dict with:
         'topk_params' : ndarray (n_pixels, k, n_params), best-match-first

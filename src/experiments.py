@@ -1,7 +1,7 @@
 """
 Multi-seed, multi-cost robustness experiments.
 
-Addresses two required review points (see review/reviewer_report.md):
+Addresses two required points from an external methods review (not included in this repository):
 - M2: headline subset comparisons rested on a single (LUT, truth, noise) seed
   triple with no uncertainty. `run_subset_experiment` repeats the comparison
   over many independent seed triples so results carry a mean +/- SD.
